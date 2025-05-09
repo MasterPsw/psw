@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🔒 Secret Password Manager</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --dark: #2d3436;
+            --light: #f5f6fa;
+            --success: #00b894;
+            --danger: #d63031;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--dark);
+            color: var(--light);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: rgba(45, 52, 54, 0.8);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(8px);
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        h1 {
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--secondary);
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid rgba(108, 92, 231, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--light);
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2);
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        #encryptBtn {
+            background: var(--success);
+            color: white;
+        }
+        
+        #decryptBtn {
+            background: var(--danger);
+            color: white;
+        }
+        
+        #copyBtn {
+            background: var(--primary);
+            color: white;
+            width: 100%;
+        }
+        
+        .output-container {
+            position: relative;
+        }
+        
+        #copyBtn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: auto;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .tooltip {
+            position: absolute;
+            top: -30px;
+            right: 0;
+            background: var(--dark);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .tooltip.show {
+            opacity: 1;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔒 Secret Password Manager</h1>
+        
+        <div class="input-group">
+            <label for="key">Secret Key</label>
+            <input type="password" id="key" placeholder="Enter your secret key...">
+        </div>
+        
+        <div class="input-group">
+            <label for="inputText">Your Message</label>
+            <textarea id="inputText" placeholder="Type your password or encrypted message here..."></textarea>
+        </div>
+        
+        <div class="button-group">
+            <button id="encryptBtn" onclick="encrypt()">
+                <span>🔒</span> Encrypt
+            </button>
+            <button id="decryptBtn" onclick="decrypt()">
+                <span>🔓</span> Decrypt
+            </button>
+        </div>
+        
+        <div class="input-group output-container">
+            <label for="outputText">Result</label>
+            <textarea id="outputText" readonly></textarea>
+            <button id="copyBtn" onclick="copyToClipboard()">
+                <span>⎘</span> Copy
+            </button>
+            <div class="tooltip" id="tooltip">Copied!</div>
+        </div>
+    </div>
+
+    <script>
+        function encrypt() {
+            const key = document.getElementById("key").value;
+            const text = document.getElementById("inputText").value;
+            if (!key || !text) return alert("Please enter both key and text!");
+            const encrypted = btoa(xorCipher(text, key));
+            document.getElementById("outputText").value = encrypted;
+        }
+
+        function decrypt() {
+            const key = document.getElementById("key").value;
+            const text = document.getElementById("inputText").value;
+            if (!key || !text) return alert("Please enter both key and text!");
+            try {
+                const decrypted = xorCipher(atob(text), key);
+                document.getElementById("outputText").value = decrypted;
+            } catch {
+                alert("Invalid encrypted text or key!");
+            }
+        }
+
+        function xorCipher(text, key) {
+            let result = "";
+            for (let i = 0; i < text.length; i++) {
+                const charCode = text.charCodeAt(i) ^ key.charCodeAt(i % key.length);
+                result += String.fromCharCode(charCode);
+            }
+            return result;
+        }
+
+        function copyToClipboard() {
+            const outputText = document.getElementById("outputText");
+            if (!outputText.value) return;
+            
+            outputText.select();
+            document.execCommand("copy");
+            
+            const tooltip = document.getElementById("tooltip");
+            tooltip.classList.add("show");
+            setTimeout(() => tooltip.classList.remove("show"), 2000);
+        }
+    </script>
+</body>
+</html>
